@@ -18,6 +18,7 @@ function startSpringBoot() {
         nohup java -jar target/*.jar --spring.profiles.active=${BOOT_PROFILE} &
     else
         echo "SpringBoot binaries missing"
+    fi
 }
 
 function stopSpringBoot() {
