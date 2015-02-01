@@ -18,7 +18,6 @@ function startSpringBoot() {
         nohup java -jar target/*.jar --spring.profiles.active=${BOOT_PROFILE} &
     else
         echo "SpringBoot binaries missing"
-    fi
 }
 
 function stopSpringBoot() {
@@ -36,7 +35,7 @@ function start() {
     echo "Starting OpenResty"
 
     if [ -f "$RESTY_EXEC" ]; then
-        if [-f "$OPENSHIFT_REPO_DIR/b/src/main/resources/application-$BOOT_PROFILE.properties"]; then
+        if [ -f "$OPENSHIFT_REPO_DIR/b/src/main/resources/application-$BOOT_PROFILE.properties" ]; then
             export BOOT_PORT=`grep server.port ${OPENSHIFT_REPO_DIR}/b/src/main/resources/application-${BOOT_PROFILE}.properties|cut -d= -f2`
         else
             export BOOT_PORT=9000
@@ -140,6 +139,6 @@ case "$1" in
   reload)    reload ;;
   tidy)      tidy ;;
   update)    update ;;
-  build)     update ;;
+  build)     exit 0
   *)         exit 0
 esac
