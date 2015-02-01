@@ -74,7 +74,7 @@ function stop() {
 
     if [ -f "$RESTY_PID_FILE" ]; then
         pid=`cat "$RESTY_PID_FILE" 2> /dev/null`
-        eval "'$RESTY_EXEC' -c '$RESTY_CONFIG_FILE' -s stop"
+        eval "'$RESTY_EXEC' -p '$RESTY_PREFIX' -c '$RESTY_CONFIG_FILE' -s stop"
         wait_for_stop $pid
     fi
     
