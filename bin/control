@@ -18,6 +18,7 @@ function startSpringBoot() {
         nohup java -jar target/*.jar --spring.profiles.active=${BOOT_PROFILE} &
     else
         echo "SpringBoot binaries missing"
+    fi
 }
 
 function stopSpringBoot() {
@@ -36,9 +37,9 @@ function start() {
 
     if [ -f "$RESTY_EXEC" ]; then
         if [-f "$OPENSHIFT_REPO_DIR/b/src/main/resources/application-$BOOT_PROFILE.properties"]; then
-            BOOT_PORT=`grep server.port ${OPENSHIFT_REPO_DIR}/b/src/main/resources/application-${BOOT_PROFILE}.properties|cut -d= -f2`
+            export BOOT_PORT=`grep server.port ${OPENSHIFT_REPO_DIR}/b/src/main/resources/application-${BOOT_PROFILE}.properties|cut -d= -f2`
         else
-            BOOT_PORT=9000
+            export BOOT_PORT=9000
         fi
 
         if [ -f "$OPENSHIFT_REPO_DIR/nginx.conf.erb" ]; then
