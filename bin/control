@@ -1,0 +1,144 @@
+#!/bin/bash
+
+source $OPENSHIFT_CARTRIDGE_SDK_BASH
+
+
+RESTY_EXEC=$OPENSHIFT_RESTYBOOT_DIR/nginx/sbin/nginx
+RESTY_CONFIG_FILE=$OPENSHIFT_RESTYBOOT_DIR/conf/nginx.conf
+RESTY_PID_FILE=$OPENSHIFT_RESTYBOOT_DIR/run/nginx.pid
+RESTY_PREFIX=$OPENSHIFT_RESTYBOOT_DIR/
+
+BOOT_PROFILE=${BOOT_PROFILE:-dev}
+
+function startSpringBoot() {
+    echo "Starting SpringBoot"
+    if ls $OPENSHIFT_REPO_DIR/b/target/*.jar 1>/dev/null 2>&1; then
+        echo "using profile ${BOOT_PROFILE}"
+        cd $OPENSHIFT_REPO_DIR/b
+        nohup java -jar target/*.jar --spring.profiles.active=${BOOT_PROFILE} &
+    else
+        echo "SpringBoot binaries missing"
+}
+
+function stopSpringBoot() {
+    echo "Stopping SpringBoot"
+    PID=$(ps -ef | grep java.*\.jar | grep -v grep | awk '{ print $2 }')
+    if [ -z "$PID" ]
+    then
+        client_result "SpringBoot already stopped"
+    else
+        kill $PID
+    fi
+}
+
+function start() {
+    echo "Starting OpenResty"
+
+    if [ -f "$RESTY_EXEC" ]; then
+        if [-f "$OPENSHIFT_REPO_DIR/b/src/main/resources/application-$BOOT_PROFILE.properties"]; then
+            BOOT_PORT=`grep server.port ${OPENSHIFT_REPO_DIR}/b/src/main/resources/application-${BOOT_PROFILE}.properties|cut -d= -f2`
+        else
+            BOOT_PORT=9000
+        fi
+
+        if [ -f "$OPENSHIFT_REPO_DIR/nginx.conf.erb" ]; then
+            oo-erb $OPENSHIFT_REPO_DIR/nginx.conf.erb > $OPENSHIFT_REPO_DIR/nginx.conf
+        fi
+
+        # nginx will always use the prefix defined at compile time unless an absolute path to the conf file is given
+        nohup "$RESTY_EXEC" -p "$RESTY_PREFIX" -c "$RESTY_CONFIG_FILE" 2>&1
+        [ "$?" == "0" ] && wait_for_pid_file $RESTY_PID_FILE
+
+    else
+        echo "WARN: Could not find the compiled application versions/$RESTY_EXEC, will not start"
+    fi
+	
+    startSpringBoot
+}
+
+
+function stop() {
+    echo "Starting Nginx"
+
+    if [ -f "$RESTY_PID_FILE" ]; then
+        pid=`cat "$RESTY_PID_FILE" 2> /dev/null`
+        eval "'$RESTY_EXEC' -c '$RESTY_CONFIG_FILE' -s stop"
+        wait_for_stop $pid
+    fi
+    
+    stopSpringBoot
+}
+
+
+function restart() {
+    echo "Restarting Nginx"
+    stop
+    start
+}
+
+
+function status() {
+    res=0
+    output=$(curl -s -m 30 http://$OPENSHIFT_RESTYBOOT_IP:$OPENSHIFT_RESTYBOOT_PORT/ &> /dev/null) || res=1
+
+    if [ $res -eq 0 ]
+    then
+        client_result "Nginx is running"
+        client_result "$output"
+    else
+        client_result "Nginx is either stopped or inaccessible"
+    fi
+}
+
+
+function reload() {
+    echo "Reloading Nginx"
+
+    if [ -f "$RESTY_PID_FILE" ]
+    then
+        pid=`cat "$RESTY_PID_FILE" 2> /dev/null`
+        output=$("$RESTY_EXEC" -p "$RESTY_PREFIX" -c "$RESTY_CONFIG_FILE" -s reload)
+        client_result "$output"
+    else
+        client_result "Cannot reload Nginx as it is not running"
+    fi
+    stopSpringBoot
+    startSpringBoot
+}
+
+
+function tidy() {
+    client_message "Emptying log dir: $OPENSHIFT_OPENSHIFT_DIR/logs"
+    shopt -s dotglob
+    rm -rf logs/*
+}
+
+
+function update() {
+    version=${OPENRESTY_VERSION:-1.7.7.1}
+
+    echo "Rebuilding Openresty v$version"
+    stop
+
+    mkdir -p tmp/build
+    bin/compile tmp/build
+
+    #bin_dir="usr/versions/$version/bin"
+    #mkdir -p $bin_dir
+    #cp -f tmp/build/out/nginx $bin_dir
+    
+    rm -rf tmp/build
+}
+
+
+case "$1" in
+  start)     start ;;
+  stop)      stop ;;
+  restart)   restart ;;
+  status)    status ;;
+  reload)    reload ;;
+  tidy)      tidy ;;
+  update)    update ;;
+  build)     update ;;
+  *)         exit 0
+esac

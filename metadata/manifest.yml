@@ -1,0 +1,61 @@
+Name: restyboot
+Cartridge-Short-Name: RESTYBOOT
+Display-Name: Openresty and Springboot
+Version: "0.0.1"
+Versions: ["0.0.1"]
+Website: https://github.com/shanmuha/openshift-restyboot-cartridge
+Cartridge-Version: 0.0.1
+Cartridge-Vendor: shanmu
+Categories:
+  - service
+  - nginx
+  - openresty
+  - java
+  - springboot
+  - web_framework
+Provides:
+  - nginx-1.7
+  - nginx
+  - springboot
+  - springboot(version) = 1.2.1
+  - openresty
+  - openresty(version) = 1.7.7.1
+Scaling:
+  Min: 1
+  Max: -1
+Cart-Data:
+  - Key: OPENSHIFT_OPENRESTY_PORT
+    Type: environment
+    Description: "Internal port to which the openresty binds to."
+  - Key: OPENSHIFT_OPENRESTY_IP
+    Type: environment
+    Description: "Internal IP to which the openresty binds to."
+Publishes:
+  get-doc-root:
+    Type: "FILESYSTEM:doc-root"
+  publish-http-url:
+    Type: "NET_TCP:httpd-proxy-info"
+  publish-gear-endpoint:
+    Type: "NET_TCP:gear-endpoint-info"
+Subscribes:
+  set-db-connection-info:
+    Type: "ENV:NET_TCP:db:connection-info"
+    Required: false
+Group-Overrides:
+  - components:
+    - nginx-1.7
+    - openresty
+    - web_proxy
+Endpoints:
+  - Private-IP-Name:   IP
+    Private-Port-Name: PORT
+    Private-Port:      8080
+    Public-Port-Name:  PROXY_PORT
+    Mappings:
+      - Frontend:      ""
+        Backend:       ""
+        Options:       { websocket: true }
+      - Frontend:      "/health"
+        Backend:       ""
+        Options:       { health: true }
+Install-Build-Required: true
