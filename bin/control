@@ -140,6 +140,6 @@ case "$1" in
   reload)    reload ;;
   tidy)      tidy ;;
   update)    update ;;
-  build)     exit 0
+  build)     exit 0 ;;
   *)         exit 0
 esac
