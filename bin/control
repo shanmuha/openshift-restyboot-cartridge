@@ -32,6 +32,17 @@ function stopSpringBoot() {
     fi
 }
 
+function build_Springboot()
+{
+       if [ -f "$OPENSHIFT_REPO_DIR/b/pom.xml" ]; then
+               echo "----> Building SpringBoot with Maven"
+               cd $OPENSHIFT_REPO_DIR/b
+               mvn package -s $OPENSHIFT_RESTYBOOT_DIR/m2/settings.xml -DskipTests=true
+       else
+               echo "xxxxx> Missing pom file"
+       fi
+}
+
 function start() {
     echo "Starting OpenResty"
 
@@ -140,6 +151,6 @@ case "$1" in
   reload)    reload ;;
   tidy)      tidy ;;
   update)    update ;;
-  build)     exit 0 ;;
+  build)     build_Springboot ;;
   *)         exit 0
 esac

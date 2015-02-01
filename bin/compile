@@ -78,16 +78,6 @@ install_LuaRocks()
 	make clean
 }
 
-build_Springboot()
-{
-	if [ -f "$OPENSHIFT_REPO_DIR/b/pom.xml" ]; then
-		echo "----> Building SpringBoot with Maven"
-		cd $OPENSHIFT_REPO_DIR/b
-		mvn package -s $OPENSHIFT_RESTYBOOT_DIR/m2/settings.xml -DskipTests=true
-	else
-		echo "xxxxx> Missing pom file"
-	fi
-}
 # Arguments:
 # Name
 # Version
@@ -117,4 +107,3 @@ get_ver "PCRE" "$pcre_ver" "$pcre_url" "$pcre_file"
 echo $openresty_url
 get_ver "OpenResty" "$openresty_ver" "$openresty_url" "$openresty_file"
 get_ver "LuaRocks" "$luarocks_ver" "$luarocks_url" "$luarocks_file"
-build_Springboot
