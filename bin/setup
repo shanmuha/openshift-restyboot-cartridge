@@ -6,7 +6,7 @@ case "$1" in
 esac
 
 # Parse arguments
-source "util"
+source "bin/util"
 parse_args $@
 
 # Don't set -u until after the above arg parsing is complete
