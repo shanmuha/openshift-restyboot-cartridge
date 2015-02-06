@@ -1,4 +1,4 @@
-## Scalable Openshift Nginx Springboot Cartridge
+## Openshift Nginx Springboot Cartridge
 
 A cartridge for OpenShift that enables OpenResty/NGINX to be used with spring boot. This OpenShift cartidge is not scalable yet.
 
